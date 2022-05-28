@@ -62,10 +62,20 @@ class Field:
                             ry = -1
                         cell_neighbor = self.field[rx][ry]
                         check_res.append(cell_neighbor)
-                if sum(check_res) in self.live_cell:
-                    self.next_field[i][j] = 1
+
+                # выживание
+                if self.field[i][j]:
+                    if sum(check_res) in self.live_cell[0]:
+                        self.next_field[i][j] = 1
+                    else:
+                        self.next_field[i][j] = 0
+
+                # рождение
                 else:
-                    self.next_field[i][j] = 0
+                    if sum(check_res) in self.live_cell[1]:
+                        self.next_field[i][j] = 1
+                    else:
+                        self.next_field[i][j] = 0
 
         self.field = deepcopy(self.next_field)
 
@@ -171,8 +181,8 @@ def run():
     # Параметры клеток
     tile = 50
 
-    # правила игры
-    live_cell = [3, 4]
+    # правила игры [выжвание], [рождение]
+    live_cell = [[2, 3], [3]]
 
     # создать сетку
     field = Field(tile, live_cell)
