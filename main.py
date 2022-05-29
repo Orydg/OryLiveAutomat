@@ -10,17 +10,37 @@ import pygame
 pygame.init()
 
 
+def print_text(message, sc, x, y, font_color=pygame.Color("darkorchid4"),
+               font_type=pygame.font.match_font(pygame.font.get_fonts()[0]),
+               font_size=25):
+    """
+    Метод отображения текста на экране
+
+    """
+
+    font_type = pygame.font.Font(font_type, font_size)
+    text = font_type.render(message, True, font_color)
+    sc.blit(text, (x, y))
+
+
 class Numbers:
-    def __init__(self, name, x, y, font_size=20, font_type=pygame.font.match_font(pygame.font.get_fonts()[0])):
-        self.num_name = name
+    def __init__(self, x, y, font_size=60, font_type=pygame.font.match_font(pygame.font.get_fonts()[0])):
         self.x = x
         self.y = y
         self.font_size = font_size
         self.font_type = font_type
         self.active = False
 
-    def draw_num(self):
-        pass
+    def draw_num(self, num_name, sc, x, y):
+        self.x = x
+        self.y = y
+        font_type = pygame.font.Font(self.font_type, self.font_size)
+        if self.active:
+            font_color = pygame.Color("darkgreen")
+        else:
+            font_color = pygame.Color("darkorchid4")
+        text = font_type.render(num_name, True, font_color)
+        sc.blit(text, (self.x, self.y))
 
 
 class Cell:
@@ -56,6 +76,7 @@ class Field:
         self.field = [[0 for _ in range(self.y)] for _ in range(self.x)]
         self.next_field = [[0 for _ in range(self.y)] for _ in range(self.x)]
         self.live_cell = live_cell
+        self.num_law = [[Numbers(i, j) for j in range(10)] for i in range(2)]
 
     def checking_neighbors(self):
         for i in range(self.x):
@@ -102,6 +123,35 @@ class Field:
                 # клетка
                 self.cells[i][j].set_live(self.field[i][j])
                 self.cells[i][j].draw(sc)
+
+    def draw_rules_space(self, sc):
+        # размеры выводимой области
+        size = sc.get_size()
+
+        # первая строка текста
+        print_text("Закон формирования новой жизни!", sc, size[0] // 3, size[1] // 20)
+
+        # прорисовка первого ряда
+        for i, num in enumerate(self.num_law[0]):
+            if i in self.live_cell[1]:
+                num.active = True
+            else:
+                num.active = False
+            num.draw_num(num_name=str(i), sc=sc, x=size[0] // 4 + i * self.tile, y=size[1] // 6.0)
+
+        # вторая строка текста
+        print_text("Закон выживания существующей жизни!", sc, size[0] // 3.25, size[1] // 2.2)
+
+        # прорисовка второго ряда
+        for i, num in enumerate(self.num_law[1]):
+            if i in self.live_cell[0]:
+                num.active = True
+            else:
+                num.active = False
+            num.draw_num(num_name=str(i), sc=sc, x=size[0] // 4 + i * self.tile, y=size[1] // 1.7)
+
+        # заключительный текст
+        print_text("В прочих случаях жизни не существует!", sc, size[0] // 3.25, size[1] // 1.2)
 
 
 class GUI:
@@ -186,9 +236,10 @@ class GUI:
 
                 # анализ нажатия кнопок мыши
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button in [1]:  # ЛКМ
-                    mx, my = event.pos
-                    mx, my = mx // self.tile, my // self.tile
-                    self.field.click(mx, my)
+                    if not self.rules_board:
+                        mx, my = event.pos
+                        mx, my = mx // self.tile, my // self.tile
+                        self.field.click(mx, my)
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button in [3]:  # ПКМ
                     pass
@@ -204,6 +255,7 @@ class GUI:
             if self.rules_board:
                 if self.pause:
                     self.rules_space.fill(pygame.Color('floralwhite'))
+                    self.field.draw_rules_space(self.rules_space)
                     self.sc.blit(self.rules_space, (self.width_screen // 2 - self.rules_space_w // 2,
                                                     self.height_screen // 2 - self.rules_space_h // 2))
 
