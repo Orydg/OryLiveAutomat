@@ -30,10 +30,12 @@ class Numbers:
         self.font_size = font_size
         self.font_type = font_type
         self.active = False
+        self.num_name = None
 
     def draw_num(self, num_name, sc, x, y):
         self.x = x
         self.y = y
+        self.num_name = num_name
         font_type = pygame.font.Font(self.font_type, self.font_size)
         if self.active:
             font_color = pygame.Color("darkgreen")
@@ -77,6 +79,7 @@ class Field:
         self.next_field = [[0 for _ in range(self.y)] for _ in range(self.x)]
         self.live_cell = live_cell
         self.num_law = [[Numbers(i, j) for j in range(10)] for i in range(2)]
+        self.nums_space = None
 
     def checking_neighbors(self):
         for i in range(self.x):
@@ -124,8 +127,24 @@ class Field:
                 self.cells[i][j].set_live(self.field[i][j])
                 self.cells[i][j].draw(sc)
 
+    def click_nums(self, x, y):
+        size = self.num_law[0][0].font_size
+        for num in self.num_law[0]:
+            if num.x <= x <= num.x + size // 2 and num.y <= y <= num.y + size:
+                if num.active:
+                    self.live_cell[1].remove(int(num.num_name))
+                else:
+                    self.live_cell[1].append(int(num.num_name))
+        for num in self.num_law[1]:
+            if num.x <= x <= num.x + size // 2 and num.y <= y <= num.y + size:
+                if num.active:
+                    self.live_cell[0].remove(int(num.num_name))
+                else:
+                    self.live_cell[0].append(int(num.num_name))
+
     def draw_rules_space(self, sc):
         # размеры выводимой области
+        self.nums_space = sc
         size = sc.get_size()
 
         # первая строка текста
@@ -240,6 +259,9 @@ class GUI:
                         mx, my = event.pos
                         mx, my = mx // self.tile, my // self.tile
                         self.field.click(mx, my)
+                    else:
+                        self.field.click_nums(event.pos[0] - (self.width_screen // 2 - self.rules_space_w // 2),
+                                              event.pos[1] - (self.height_screen // 2 - self.rules_space_h // 2))
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button in [3]:  # ПКМ
                     pass
