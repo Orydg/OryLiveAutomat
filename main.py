@@ -1,7 +1,6 @@
-""" Симуляция "Жизни".
+"""
 
-Игра жизни Конвея — это классическая  автоматизация, созданная в 1970 году Джоном
-Конвей. https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
+Игра жизни Конвея — https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
 
 """
 
@@ -9,6 +8,19 @@ from win32api import GetSystemMetrics
 from copy import deepcopy
 import pygame
 pygame.init()
+
+
+class Numbers:
+    def __init__(self, name, x, y, font_size=20, font_type=pygame.font.match_font(pygame.font.get_fonts()[0])):
+        self.num_name = name
+        self.x = x
+        self.y = y
+        self.font_size = font_size
+        self.font_type = font_type
+        self.active = False
+
+    def draw_num(self):
+        pass
 
 
 class Cell:
@@ -21,10 +33,11 @@ class Cell:
     def draw(self, sc):
         x, y = self.x * self.tile, self.y * self.tile
         line_w = 2
-        pygame.draw.line(sc, pygame.Color('darkorange1'), (x, y), (x + self.tile, y), line_w)
-        pygame.draw.line(sc, pygame.Color('darkorange1'), (x + self.tile, y), (x + self.tile, y + self.tile), line_w)
-        pygame.draw.line(sc, pygame.Color('darkorange1'), (x + self.tile, y + self.tile), (x, y + self.tile), line_w)
-        pygame.draw.line(sc, pygame.Color('darkorange1'), (x, y + self.tile), (x, y), line_w)
+        cell_color = pygame.Color('darkorchid4')
+        pygame.draw.line(sc, cell_color, (x, y), (x + self.tile, y), line_w)
+        pygame.draw.line(sc, cell_color, (x + self.tile, y), (x + self.tile, y + self.tile), line_w)
+        pygame.draw.line(sc, cell_color, (x + self.tile, y + self.tile), (x, y + self.tile), line_w)
+        pygame.draw.line(sc, cell_color, (x, y + self.tile), (x, y), line_w)
         if self.live:
             pygame.draw.rect(sc, pygame.Color('darkgreen'),
                              (x + line_w, y + line_w, self.tile - line_w, self.tile - line_w))
@@ -41,8 +54,6 @@ class Field:
         self.y = GetSystemMetrics(1) // tile
         self.cells = [[Cell(i, j, tile) for j in range(self.y)] for i in range(self.x)]
         self.field = [[0 for _ in range(self.y)] for _ in range(self.x)]
-        # self.field[0][1] = 1
-        # self.field[0][2] = 1
         self.next_field = [[0 for _ in range(self.y)] for _ in range(self.x)]
         self.live_cell = live_cell
 
@@ -85,7 +96,7 @@ class Field:
         else:
             self.field[x][y] = 1
 
-    def draw(self, sc):
+    def draw_field(self, sc):
         for i in range(self.x):
             for j in range(self.y):
                 # клетка
@@ -95,7 +106,7 @@ class Field:
 
 class GUI:
 
-    def __init__(self, field,  fps=1):
+    def __init__(self, field,  fps=10):
         # название окна
         pygame.display.set_caption('OLA')
 
@@ -109,13 +120,19 @@ class GUI:
         self.sc = pygame.display.set_mode((self.width_screen, self.height_screen), pygame.FULLSCREEN)
 
         # флаг паузы
-        self.pause = False
+        self.pause = True
 
         # field
         self.field = field
 
         # tile cell
         self.tile = field.tile
+
+        # rules board
+        self.rules_board = False
+        self.rules_space_w = self.width_screen // 10 * 6
+        self.rules_space_h = self.height_screen // 10 * 3
+        self.rules_space = pygame.Surface((self.rules_space_w, self.rules_space_h))
 
         # обработка событий (этот метод в конструкторе идет последним, после него конструктор читает)
         self.event_loop()
@@ -142,12 +159,26 @@ class GUI:
                     if event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
                         exit()
 
+                    # очистить поле
+                    elif event.key == pygame.K_r:
+                        self.field.field = [[0 for _ in range(self.field.y)] for _ in range(self.field.x)]
+
+                    # ввод правил
+                    elif event.key == pygame.K_TAB:
+                        if not self.pause:
+                            self.pause = True
+                        if self.rules_board:
+                            self.rules_board = False
+                        else:
+                            self.rules_board = True
+
                     # пауза
                     elif event.key == pygame.K_SPACE:
-                        if self.pause:
-                            self.pause = False
-                        else:
-                            self.pause = True
+                        if not self.rules_board:
+                            if self.pause:
+                                self.pause = False
+                            else:
+                                self.pause = True
 
                 # обработка отжатий клавиш
                 elif event.type == pygame.KEYUP:
@@ -167,7 +198,14 @@ class GUI:
                 self.field.checking_neighbors()
 
             # отрисовать сетку
-            self.field.draw(self.sc)
+            self.field.draw_field(self.sc)
+
+            # ввод правил
+            if self.rules_board:
+                if self.pause:
+                    self.rules_space.fill(pygame.Color('floralwhite'))
+                    self.sc.blit(self.rules_space, (self.width_screen // 2 - self.rules_space_w // 2,
+                                                    self.height_screen // 2 - self.rules_space_h // 2))
 
             # после отрисовки всего, переворачиваем экран
             pygame.display.update()
