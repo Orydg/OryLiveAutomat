@@ -89,9 +89,9 @@ class Field:
                             continue
                         rx, ry = i + xi, j + yj
                         if rx == self.x:
-                            rx = -1
+                            rx = 0
                         if ry == self.y:
-                            ry = -1
+                            ry = 0
                         cell_neighbor = self.field[rx][ry]
                         check_res.append(cell_neighbor)
 
