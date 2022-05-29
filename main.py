@@ -225,7 +225,7 @@ class GUI:
                 if event.type == pygame.KEYDOWN:
 
                     # закрыть программу
-                    if event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
+                    if event.key == pygame.K_ESCAPE:
                         exit()
 
                     # очистить поле
