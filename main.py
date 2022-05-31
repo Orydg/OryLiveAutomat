@@ -115,10 +115,13 @@ class Field:
         self.field = deepcopy(self.next_field)
 
     def click(self, x, y):
-        if self.field[x][y]:
-            self.field[x][y] = 0
-        else:
-            self.field[x][y] = 1
+        try:
+            if self.field[x][y]:
+                self.field[x][y] = 0
+            else:
+                self.field[x][y] = 1
+        except IndexError:
+            pass
 
     def draw_field(self, sc):
         for i in range(self.x):
