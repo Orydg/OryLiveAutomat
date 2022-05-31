@@ -78,7 +78,7 @@ class Field:
         self.field = [[0 for _ in range(self.y)] for _ in range(self.x)]
         self.next_field = [[0 for _ in range(self.y)] for _ in range(self.x)]
         self.live_cell = live_cell
-        self.num_law = [[Numbers(i, j) for j in range(10)] for i in range(2)]
+        self.num_law = [[Numbers(i, j) for j in range(9)] for i in range(2)]
         self.nums_space = None
 
     def checking_neighbors(self):
