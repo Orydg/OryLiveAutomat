@@ -13,8 +13,16 @@ pygame.init()
 def print_text(message, sc, x, y, font_color=pygame.Color("darkorchid4"),
                font_type=pygame.font.match_font(pygame.font.get_fonts()[0]),
                font_size=25):
+
     """
-    Метод отображения текста на экране
+    Метод отображения текста на экране.
+
+    message - выводимо сообщение.
+    sc - поверхность, на которой будет отображаться сообщение.
+    x, y - координаты верхнего левого угла рамки сообщения.
+    font_color - цвет текста сообщения.
+    font_type - шрифт сообщения.
+    font_size - размер шрифта.
 
     """
 
@@ -24,6 +32,20 @@ def print_text(message, sc, x, y, font_color=pygame.Color("darkorchid4"),
 
 
 class Numbers:
+    """
+    Класс для формирования объектов - цифр на доске правил формирования жизни.
+
+    При создании объектов класса используются следующие аргументы:
+    x, y - координаты верхнего левого угла цифры.
+    font_size - размер шрифта цифры.
+    font_type - шрифт цифры.
+
+    Внутренние атрибуты объектов класса:
+    active - флаг, имеющий положения True, False, по которому можно узнать, активна ли цифра в данный момент.
+    num_name - имя цифры, точнее сама цифра (0, 1, 2 или любое другое число в текстовом формате).
+
+    """
+
     def __init__(self, x, y, font_size=60, font_type=pygame.font.match_font(pygame.font.get_fonts()[0])):
         self.x = x
         self.y = y
@@ -33,6 +55,16 @@ class Numbers:
         self.num_name = None
 
     def draw_num(self, num_name, sc, x, y):
+        """
+        Метод объектов класс Numbers, отвечающий за отрисовку объекта - цифры.
+
+        Аргументы метода:
+        num_name - число в текстовом формате данных (str(int)).
+        sc - поверхность на которой будет нарисовано число.
+        x, y - координаты левого верхнего угла числа.
+
+        """
+
         self.x = x
         self.y = y
         self.num_name = num_name
@@ -46,6 +78,17 @@ class Numbers:
 
 
 class Cell:
+    """
+    Класс ячеек.
+
+     При создании объектов класса используются следующие аргументы:
+     x, y - координаты левого верхнего угла ячейки.
+     tile - размер ячейки по ширине и высоте (одно число, так как они квадратные).
+
+     Внутренние атрибуты объектов класса:
+     live - флаг, показывающий живая сейчас ячейка или нет, принимает значения 0 (мертвая) или 1 (живая).
+
+    """
     def __init__(self, x, y, tile=50):
         self.x = x
         self.y = y
@@ -53,22 +96,66 @@ class Cell:
         self.live = 0
 
     def draw(self, sc):
+        """
+        Метод объектов класса Cell, отвечающий за отрисовку клеток.
+
+        Аргументы метода:
+        sc - плоскость на которой будут нарисованы клетки.
+
+        """
+
+        # координаты клетки
         x, y = self.x * self.tile, self.y * self.tile
+
+        # ширина стенки клетки (в пикселях)
         line_w = 2
+
+        # цвет стенок клетки
         cell_color = pygame.Color('darkorchid4')
+
+        # отрисовка стенок клетки
         pygame.draw.line(sc, cell_color, (x, y), (x + self.tile, y), line_w)
         pygame.draw.line(sc, cell_color, (x + self.tile, y), (x + self.tile, y + self.tile), line_w)
         pygame.draw.line(sc, cell_color, (x + self.tile, y + self.tile), (x, y + self.tile), line_w)
         pygame.draw.line(sc, cell_color, (x, y + self.tile), (x, y), line_w)
+
+        # закрашивание клетки, если она живая
         if self.live:
             pygame.draw.rect(sc, pygame.Color('darkgreen'),
                              (x + line_w, y + line_w, self.tile - line_w, self.tile - line_w))
 
     def set_live(self, live):
-        self.live = live
+        """
+
+        Метод объектов класса Cell, отвечающий за смену атрибута live.
+
+        Аргументы метода:
+        live - принимает значения 0 или 1.
+
+        """
+
+        if self.live in [0, 1]:
+            self.live = live
 
 
 class Field:
+    """
+
+    Класс поля клеток.
+
+    При создании объектов класса используются следующие аргументы:
+    tile - ширина клетки.
+    live_cell - правила жизни клеток.
+
+    Внутренние атрибуты объектов класса:
+    x, y - количество клеток по ширине и высоте экрана.
+    cells - двумерный список объектов клеток - класса Cell.
+    field - двумерный список нулей и единиц, в котором обрабатывается поиск соседей клеток.
+    next_field - двумерный список нулей и единиц, результат поиска соседей в field,
+    после используется для передачи данных о состоянии жизни в каждую клетку.
+    num_law - двумерный список цифр для доски с правилами жизни (содержит объекты класса Numbers).
+
+    """
     def __init__(self, tile, live_cell):
 
         self.tile = tile
@@ -79,13 +166,19 @@ class Field:
         self.next_field = [[0 for _ in range(self.y)] for _ in range(self.x)]
         self.live_cell = live_cell
         self.num_law = [[Numbers(i, j) for j in range(9)] for i in range(2)]
-        self.nums_space = None
 
     def checking_neighbors(self):
+        """
+
+        Метод объектов класс Field, отвечающий за поиск соседей клетки.
+        Соседи ищутся даже с противоположного края - пространство топологически замкнуто.
+
+        """
         for i in range(self.x):
             for j in range(self.y):
-                # проверяем всех соседей для это клетки
+                # список соседей исследуемой клетки
                 check_res = []
+                # проверяем всех соседей для это клетки
                 for xi in -1, 0, 1:
                     for yj in -1, 0, 1:
                         if xi == 0 and yj == 0:
@@ -95,26 +188,45 @@ class Field:
                             rx = 0
                         if ry == self.y:
                             ry = 0
-                        cell_neighbor = self.field[rx][ry]
-                        check_res.append(cell_neighbor)
+                        # записываем в список состояние найденного соседа (0 или 1)
+                        check_res.append(self.field[rx][ry])
 
-                # выживание
+                # проверяем правило выживания (статус исследуемой клетки "жива" - 1)
                 if self.field[i][j]:
+                    # если количество живых соседей удовлетворяет правилам, то она жива
                     if sum(check_res) in self.live_cell[0]:
                         self.next_field[i][j] = 1
+                    # если нет - мертва
                     else:
                         self.next_field[i][j] = 0
 
-                # рождение
+                # проверяем правило рождения (статус исследуемой клетки "мертва" - 0)
                 else:
+                    # если количество живых соседей удовлетворяет правилам, то она жива
                     if sum(check_res) in self.live_cell[1]:
                         self.next_field[i][j] = 1
+                    # если нет - мертва
                     else:
                         self.next_field[i][j] = 0
 
+        # глубокое копирование списка нового состояния поля клеток,
+        # чтобы избежать свойст редактируемых объектов в Python
         self.field = deepcopy(self.next_field)
 
     def click(self, x, y):
+        """
+
+        Метод объектов класс Field, отвечающий за обработку нажатий ЛКМ по клетке.
+
+         Аргументы метода:
+         x, y - координаты ЛКМ в момент нажатия
+
+        """
+
+        # получаем из координат ЛКМ позиции клеток в списке клеток
+        x, y = x // self.tile, y // self.tile
+
+        # проверка на наличие исключений, если клик ЛКМ был за границей сетки клеток
         try:
             if self.field[x][y]:
                 self.field[x][y] = 0
@@ -124,6 +236,14 @@ class Field:
             pass
 
     def draw_field(self, sc):
+        """
+
+        Метод объектов класс Field, отвечающий за отрисовку клеток.
+
+        Аргументы метода:
+        sc - поверхность для отрисовки.
+
+        """
         for i in range(self.x):
             for j in range(self.y):
                 # клетка
@@ -131,6 +251,14 @@ class Field:
                 self.cells[i][j].draw(sc)
 
     def click_nums(self, x, y):
+        """
+
+        Метод объектов класс Field, отвечающий за обработку нажатий ЛКМ по цифрам на доске правил жизни клеток.
+
+        Аргументы метода:
+        x, y - координаты курсора в момент нажатия ЛКМ.
+
+        """
         size = self.num_law[0][0].font_size
         for num in self.num_law[0]:
             if num.x <= x <= num.x + size // 2 and num.y <= y <= num.y + size:
@@ -146,8 +274,13 @@ class Field:
                     self.live_cell[0].append(int(num.num_name))
 
     def draw_rules_space(self, sc):
+        """
+
+        Метод объектов класс Field, отвечающий за отрисовку цифр на доске правил жизни клеток.
+
+        """
+
         # размеры выводимой области
-        self.nums_space = sc
         size = sc.get_size()
 
         # первая строка текста
@@ -177,10 +310,27 @@ class Field:
 
 
 class GUI:
+    """
+
+    Класс, отвечающий за визуализацию.
+
+    При создании объектов класса используются следующие аргументы:
+    field - объект класс Field.
+    fps - количество кадров в секунду (целое число от 0 до 30).
+
+    Внутренние атрибуты объектов класса:
+    width_screen, height_screen - ширина и высота пользовательского окна (фулскрин по умолчанию)
+    sc - плоскость пользовательского окна.
+    pause - флаг паузы (True или False).
+    rules_board - флаг активности доски правил жизни клеток (True или False).
+    rules_space_w, rules_space_h - ширина и высота доски правил жизни клеток.
+    rules_space - плоскость для изображения доски правил жизни клеток.
+
+    """
 
     def __init__(self, field,  fps=10):
         # название окна
-        pygame.display.set_caption('OLA')
+        pygame.display.set_caption('OryLiveAutomat')
 
         # ширина и высота окна берутся из системных настроек монитора (для режима FULLSCREEN)
         self.width_screen, self.height_screen = GetSystemMetrics(0), GetSystemMetrics(1)
@@ -197,9 +347,6 @@ class GUI:
         # field
         self.field = field
 
-        # tile cell
-        self.tile = field.tile
-
         # rules board
         self.rules_board = False
         self.rules_space_w = self.width_screen // 10 * 6
@@ -210,6 +357,11 @@ class GUI:
         self.event_loop()
 
     def event_loop(self):
+        """
+
+        Метод класс GUI, отвечающий за обработку событий.
+
+        """
 
         # Ввод процесса (события)
         while True:
@@ -252,22 +404,14 @@ class GUI:
                             else:
                                 self.pause = True
 
-                # обработка отжатий клавиш
-                elif event.type == pygame.KEYUP:
-                    pass
-
                 # анализ нажатия кнопок мыши
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button in [1]:  # ЛКМ
                     if not self.rules_board:
                         mx, my = event.pos
-                        mx, my = mx // self.tile, my // self.tile
                         self.field.click(mx, my)
                     else:
                         self.field.click_nums(event.pos[0] - (self.width_screen // 2 - self.rules_space_w // 2),
                                               event.pos[1] - (self.height_screen // 2 - self.rules_space_h // 2))
-
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button in [3]:  # ПКМ
-                    pass
 
             # обновить состояние сетки
             if not self.pause:
@@ -292,11 +436,16 @@ class GUI:
 
 
 def run():
+    """
+
+    Функция запуска программы.
+
+    """
 
     # Параметры клеток
     tile = 50
 
-    # правила игры [выжвание], [рождение]
+    # правила игры [выживание], [рождение]
     live_cell = [[2, 3], [3]]
 
     # создать сетку
