@@ -156,7 +156,7 @@ class Field:
                 num.active = True
             else:
                 num.active = False
-            num.draw_num(num_name=str(i), sc=sc, x=size[0] // 4 + i * self.tile, y=size[1] // 6.0)
+            num.draw_num(num_name=str(i), sc=sc, x=size[0] // 3.5 + i * self.tile, y=size[1] // 6.0)
 
         # вторая строка текста
         print_text("Закон выживания существующей жизни!", sc, size[0] // 3.25, size[1] // 2.2)
@@ -167,7 +167,7 @@ class Field:
                 num.active = True
             else:
                 num.active = False
-            num.draw_num(num_name=str(i), sc=sc, x=size[0] // 4 + i * self.tile, y=size[1] // 1.7)
+            num.draw_num(num_name=str(i), sc=sc, x=size[0] // 3.5 + i * self.tile, y=size[1] // 1.7)
 
         # заключительный текст
         print_text("В прочих случаях жизни не существует!", sc, size[0] // 3.25, size[1] // 1.2)
